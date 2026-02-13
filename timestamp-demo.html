@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timestamp Model Demo - Custom Reports</title>
+    <link rel="stylesheet" href="ai-builder-styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            padding: 2rem;
+            background: #f8fafc;
+        }
+        .demo-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 0.75rem;
+            padding: 2rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .demo-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .demo-header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+        .demo-header p {
+            color: #64748b;
+            font-size: 1.125rem;
+        }
+        .demo-section {
+            margin-bottom: 2rem;
+        }
+        .demo-section h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <div class="demo-header">
+            <h1><i class="fas fa-clock"></i> Timestamp Model Demo</h1>
+            <p>Custom Reports Timestamp Selection Implementation</p>
+        </div>
+
+        <div class="demo-section">
+            <h2>PRD Implementation: Timestamp Selector</h2>
+            <p style="margin-bottom: 1.5rem; color: #64748b;">
+                This demonstrates the timestamp model implementation based on the PRD requirements. 
+                The selector allows users to choose which timestamp defines their report's time lens.
+            </p>
+
+            <!-- Timestamp Model Section -->
+            <div class="section-title">
+                <i class="fas fa-clock"></i> Time Basis
+                <span class="section-subtitle">Choose which timestamp to group your data by</span>
+            </div>
+            <div class="timestamp-selector">
+                <div class="timestamp-control">
+                    <label for="dateBasisSelect">Date based on:</label>
+                    <select id="dateBasisSelect" class="date-basis-select" onchange="updateDateBasis()">
+                        <option value="order_created" data-context="order,sales" data-accounting="false">Order created</option>
+                        <option value="order_fulfilled" data-context="fulfillment" data-accounting="accrual">Order fulfilled</option>
+                        <option value="payment_authorized" data-context="payment" data-accounting="false">Payment authorized</option>
+                        <option value="payment_completed" data-context="payment" data-accounting="cash">Payment completed</option>
+                        <option value="campaign_attribution" data-context="marketing" data-accounting="false">Campaign attribution</option>
+                        <option value="inventory_event" data-context="inventory" data-accounting="false">Inventory event</option>
+                        <option value="visit_time" data-context="traffic" data-accounting="false">Visit/session time</option>
+                    </select>
+                    <i class="fas fa-chevron-down select-arrow"></i>
+                </div>
+                
+                <div class="timestamp-explanation" id="timestampExplanation">
+                    <i class="fas fa-info-circle"></i>
+                    <span id="explanationText">When the order was initiated. Represents demand creation and the start of the sale lifecycle.</span>
+                </div>
+
+                <div class="accounting-notice" id="accountingNotice" style="display: none;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>Some metrics may not align with accounting or payout timing.</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>Date Range Controls</h2>
+            <div class="date-range-control">
+                <div class="date-range-header">
+                    <span id="dateRangeLabel">Date range (based on Order created)</span>
+                    <button class="btn btn-sm btn-outline" onclick="showDatePresets()">
+                        <i class="fas fa-calendar-alt"></i> Quick Select
+                    </button>
+                </div>
+                <div class="date-inputs">
+                    <div class="date-input-group">
+                        <label>From</label>
+                        <input type="date" id="startDate" class="date-input" value="2026-01-01">
+                    </div>
+                    <div class="date-input-group">
+                        <label>To</label>
+                        <input type="date" id="endDate" class="date-input" value="2026-01-16">
+                    </div>
+                </div>
+                <div class="date-presets" id="datePresets" style="display: none;">
+                    <button class="preset-btn" onclick="setDateRange('today')">Today</button>
+                    <button class="preset-btn" onclick="setDateRange('yesterday')">Yesterday</button>
+                    <button class="preset-btn" onclick="setDateRange('last7days')">Last 7 days</button>
+                    <button class="preset-btn" onclick="setDateRange('last30days')">Last 30 days</button>
+                    <button class="preset-btn" onclick="setDateRange('thisMonth')">This month</button>
+                    <button class="preset-btn" onclick="setDateRange('lastMonth')">Last month</button>
+                    <button class="preset-btn" onclick="setDateRange('thisQuarter')">This quarter</button>
+                    <button class="preset-btn" onclick="setDateRange('lastQuarter')">Last quarter</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>Context-Aware AI Suggestions</h2>
+            <div id="contextSuggestions" class="ai-suggestions">
+                <div class="suggestion-card" onclick="applySuggestion('returning-customers-top-items')">
+                    <i class="fas fa-sync-alt"></i>
+                    <div class="suggestion-content">
+                        <h4>Returning Customers' Top Items</h4>
+                        <p>Combine customers and items data to find popular items among repeat customers</p>
+                    </div>
+                </div>
+                <div class="suggestion-card" onclick="applySuggestion('customer-lifetime-value')">
+                    <i class="fas fa-chart-line"></i>
+                    <div class="suggestion-content">
+                        <h4>Customer Lifetime Value Analysis</h4>
+                        <p>Group customers by purchase patterns and calculate CLV metrics</p>
+                    </div>
+                </div>
+                <div class="suggestion-card" onclick="applySuggestion('sales-trend-analysis')">
+                    <i class="fas fa-trending-up"></i>
+                    <div class="suggestion-content">
+                        <h4>Sales Trend Analysis</h4>
+                        <p>Analyze sales patterns and identify growth opportunities</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>Key Features Demonstrated</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                <div style="padding: 1rem; background: #f8fafc; border-radius: 0.5rem; border-left: 3px solid #6366f1;">
+                    <h4 style="margin: 0 0 0.5rem 0; color: #374151;">✅ Canonical Timestamps</h4>
+                    <p style="margin: 0; font-size: 0.875rem; color: #64748b;">7 lifecycle timestamps from PRD</p>
+                </div>
+                <div style="padding: 1rem; background: #f8fafc; border-radius: 0.5rem; border-left: 3px solid #10b981;">
+                    <h4 style="margin: 0 0 0.5rem 0; color: #374151;">✅ Dynamic Explanations</h4>
+                    <p style="margin: 0; font-size: 0.875rem; color: #64748b;">Context-aware help text</p>
+                </div>
+                <div style="padding: 1rem; background: #f8fafc; border-radius: 0.5rem; border-left: 3px solid #f59e0b;">
+                    <h4 style="margin: 0 0 0.5rem 0; color: #374151;">✅ Accounting Notices</h4>
+                    <p style="margin: 0; font-size: 0.875rem; color: #64748b;">Compliance warnings</p>
+                </div>
+                <div style="padding: 1rem; background: #f8fafc; border-radius: 0.5rem; border-left: 3px solid #8b5cf6;">
+                    <h4 style="margin: 0 0 0.5rem 0; color: #374151;">✅ Context-Aware AI</h4>
+                    <p style="margin: 0; font-size: 0.875rem; color: #64748b;">Suggestions adapt to timestamp</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>Instructions</h2>
+            <ol style="color: #64748b; line-height: 1.6;">
+                <li><strong>Change the timestamp</strong> in the dropdown to see dynamic explanations</li>
+                <li><strong>Notice accounting warnings</strong> for non-accounting aligned timestamps</li>
+                <li><strong>Observe AI suggestions</strong> change based on context (try "Payment completed" or "Campaign attribution")</li>
+                <li><strong>Use date presets</strong> by clicking "Quick Select"</li>
+                <li><strong>See date range label</strong> update with selected timestamp</li>
+            </ol>
+        </div>
+    </div>
+
+    <script src="ai-builder-script.js"></script>
+    <script>
+        // Initialize the demo
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set up initial state
+            updateDateBasis();
+            
+            // Add some demo-specific styling
+            document.querySelector('.ai-suggestions').style.display = 'flex';
+            document.querySelector('.ai-suggestions').style.flexDirection = 'column';
+            document.querySelector('.ai-suggestions').style.gap = '0.75rem';
+        });
+        
+        // Override applySuggestion for demo
+        function applySuggestion(type) {
+            alert(`Demo: Applied suggestion "${type}". In the real app, this would add widgets to the report canvas.`);
+        }
+        
+        // Add notification for demo
+        function showNotification(message) {
+            alert(`Notification: ${message}`);
+        }
+    </script>
+</body>
+</html>
